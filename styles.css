@@ -1803,6 +1803,7 @@ dialog.privacy-modal-dialog::backdrop {
     padding: 14px 18px;
   }
 }
+<<<<<<< HEAD
 
 /* Offline Banner & Network Status Indicators (PWA Support) */
 .offline-banner {
@@ -1891,3 +1892,5 @@ dialog.privacy-modal-dialog::backdrop {
   transition: filter .3s ease;
 }
 
+=======
+>>>>>>> 2430f219a1c246fe80356af5c54b09b0a879498a
