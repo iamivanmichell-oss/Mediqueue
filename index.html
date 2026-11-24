@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MediQueue - Community Healthcare Queue & Appointments</title>
+<link rel="icon" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header>
+  <div class="bar">
+    <a class="brand" href="#book" aria-label="MediQueue home">
+      <img src="logo.png" alt="MediQueue Logo">
+    </a>
+    <nav class="desktop-nav">
+      <a href="#book" class="on"><span>📅</span> Book</a>
+      <a href="#track"><span>⏱️</span> Track queue</a>
+      <a href="#centers"><span>📍</span> Find a center</a>
+      <a href="#drives"><span>📢</span> Health drives</a>
+      <a href="#staff"><span>🔒</span> Staff</a>
+    </nav>
+  </div>
+</header>
+<main>
+
+<!-- BOOKING SECTION -->
+<section id="book" class="view on">
+  <div class="view-header">
+    <span class="pill-badge">✨ Online Patient Portal</span>
+    <h1>Book an appointment</h1>
+    <p class="lead">Select your local health station, choose a clinical service, and reserve your queue slot. You'll receive an official digital pass and pre-arrival guidelines.</p>
+  </div>
+
+  <div class="booking-steps">
+    <div class="step-item active">
+      <span class="step-num">1</span>
+      <span>Facility & Service</span>
+    </div>
+    <div class="step-item">
+      <span class="step-num">2</span>
+      <span>Date & Time Slot</span>
+    </div>
+    <div class="step-item">
+      <span class="step-num">3</span>
+      <span>Digital Queue Pass</span>
+    </div>
+  </div>
+  
+  <div id="nearestAlert" class="nearest-banner" hidden></div>
+
+  <form id="bookForm">
+    <!-- Step 1: Health Center -->
+    <label>Select Health Center
+      <select id="bCenter" required></select>
+    </label>
+
+    <!-- Facility Snapshot -->
+    <div id="facilitySnapshot" class="facility-card-snapshot"></div>
+
+    <!-- Step 2: Service Selection with Interactive Visual Cards -->
+    <label>Select Healthcare Service
+      <span class="input-hint">Click a service card or use the dropdown</span>
+      <select id="bService" required style="display:none;"></select>
+    </label>
+    <div id="serviceChipsGrid" class="service-chips-grid"></div>
+
+    <!-- Step 3: Date & Slots -->
+    <label>Preferred Appointment Date
+      <input type="date" id="bDate" required>
+    </label>
+
+    <fieldset>
+      <legend>Available Time Slots (30-Minute Windows)</legend>
+      <div id="slots" class="slots"></div>
+    </fieldset>
+
+    <!-- Step 4: Patient Information -->
+    <label>Patient Full Name
+      <input id="bName" required autocomplete="name" placeholder="e.g. Maria Corazon Dela Cruz">
+    </label>
+
+    <label>Email Address
+      <span class="input-hint">Official confirmation pass, directions, and instructions will be sent here</span>
+      <input id="bEmail" type="email" autocomplete="email" placeholder="patient.email@example.com" required>
+    </label>
+
+    <button type="submit" class="primary" style="margin-top:8px;">
+      <span>Confirm Booking & Generate Pass</span> ➔
+    </button>
+  </form>
+
+  <!-- Digital Appointment Pass Result (Revealed on Booking) -->
+  <div id="bookResult" hidden></div>
+
+  <!-- Upcoming Health Drives at Selected Center -->
+  <div id="eventAnnounce" class="announcements-box"></div>
+</section>
+
+<!-- TRACK QUEUE SECTION -->
+<section id="track" class="view">
+  <div class="view-header">
+    <span class="pill-badge">⏱️ Real-Time Queue Monitor</span>
+    <h1>Track your queue</h1>
+    <p class="lead">Enter your reference code to view real-time patient queue updates, estimated wait time, and counter status.</p>
+  </div>
+
+  <form id="trackForm" class="row">
+    <input id="tRef" placeholder="Reference code, e.g. MQ-4F7K" required style="max-width:360px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase;">
+    <button type="submit" class="primary">Check Live Status</button>
+  </form>
+
+  <div id="recentBookingPrompt" style="margin-top:6px;"></div>
+
+  <div id="trackResult"></div>
+</section>
+
+<!-- FIND A CENTER SECTION -->
+<section id="centers" class="view">
+  <div class="view-header">
+    <span class="pill-badge">📍 Municipal Health Stations</span>
+    <h1>Find a health center</h1>
+    <p class="lead">Locate nearby barangay health stations, check live wait times, and view scheduled medical mission caravans.</p>
+  </div>
+
+  <form id="geoForm" class="search-controls">
+    <input id="gQuery" placeholder="Search health center by name, barangay, or address...">
+    <button type="submit" class="primary">Search</button>
+    <button type="button" id="gLocate" class="btn-secondary">📍 Use my location</button>
+  </form>
+
+  <div class="filter-chips">
+    <button type="button" class="chip-btn active" data-filter="all">All Facilities (4)</button>
+    <button type="button" class="chip-btn" data-filter="nearest">Closest First 📍</button>
+    <button type="button" class="chip-btn" data-filter="events">Has Check-Up Drive 📢</button>
+    <button type="button" class="chip-btn" data-filter="lowwait">Low Wait Times ⚡</button>
+  </div>
+
+  <div id="searchSummary" class="search-summary"></div>
+  <div id="map"></div>
+  <ul id="centerList" class="list"></ul>
+</section>
+
+<!-- COMMUNITY HEALTH DRIVES & EVENTS SECTION -->
+<section id="drives" class="view">
+  <div class="view-header">
+    <span class="pill-badge">📢 Outreach & Health Caravans</span>
+    <h1>Community Health Drives</h1>
+    <p class="lead">Explore upcoming free check-up drives, pediatric vaccination missions, and prenatal wellness caravans across General Trias.</p>
+  </div>
+
+  <div class="filter-chips" id="driveFilterChips">
+    <button type="button" class="chip-btn active" data-drive-type="all">All Drives (5)</button>
+    <button type="button" class="chip-btn" data-drive-type="Check-up Drive">Check-Up Drives ❤️</button>
+    <button type="button" class="chip-btn" data-drive-type="Vaccination">Vaccination 💉</button>
+    <button type="button" class="chip-btn" data-drive-type="Maternal Health">Maternal Care 🤰</button>
+    <button type="button" class="chip-btn" data-drive-type="Dental & Pediatric">Dental & Pediatric 🦷</button>
+  </div>
+
+  <div id="allDrivesList" class="event-list" style="margin-top:16px;"></div>
+</section>
+
+<!-- STAFF LOGIN SECTION -->
+<section id="staff" class="view">
+  <div class="view-header">
+    <span class="pill-badge">🔒 Municipal Staff Access</span>
+    <h1>Staff sign in</h1>
+    <p class="lead">Authorized medical officers and triage desk personnel only. Access live queue management and patient call controls.</p>
+  </div>
+
+  <form id="loginForm" style="max-width:380px;">
+    <label>Staff Security PIN
+      <span class="pw">
+        <input id="sPin" type="password" inputmode="numeric" autocomplete="off" placeholder="Enter 8-digit PIN" required>
+        <button type="button" class="eye" aria-label="Show PIN" aria-pressed="false" title="Click to show">
+          <svg class="i-show" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+          <svg class="i-hide" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.9 17.9A10.6 10.6 0 0 1 12 19C5.6 19 2 12 2 12a18.5 18.5 0 0 1 4.1-5.1M9.9 5.2A9.7 9.7 0 0 1 12 5c6.4 0 10 7 10 7a18.6 18.6 0 0 1-2.2 3.2M14.1 14.1a3 3 0 1 1-4.2-4.2"/><path d="M2 2l20 20"/></svg>
+        </button>
+      </span>
+    </label>
+
+    <label>Staff Password
+      <span class="pw">
+        <input id="sPass" type="password" autocomplete="current-password" placeholder="Enter password" required>
+        <button type="button" class="eye" aria-label="Show password" aria-pressed="false" title="Click to show">
+          <svg class="i-show" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+          <svg class="i-hide" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.9 17.9A10.6 10.6 0 0 1 12 19C5.6 19 2 12 2 12a18.5 18.5 0 0 1 4.1-5.1M9.9 5.2A9.7 9.7 0 0 1 12 5c6.4 0 10 7 10 7a18.6 18.6 0 0 1-2.2 3.2M14.1 14.1a3 3 0 1 1-4.2-4.2"/><path d="M2 2l20 20"/></svg>
+        </button>
+      </span>
+    </label>
+
+    <button type="submit" class="primary" style="margin-top:6px;">Sign in to Dashboard</button>
+  </form>
+</section>
+
+<!-- Emergency & Community Hotline Strip -->
+<div class="emergency-strip">
+  <div class="emergency-info">
+    <span class="emergency-icon">🚨</span>
+    <div>
+      <h4>General Trias City Health Emergency Hotlines</h4>
+      <p>For acute medical emergencies, ambulance transport, or immediate disaster triage.</p>
+    </div>
+  </div>
+  <div class="hotline-pills">
+    <a href="tel:0465095000" class="hotline-pill">📞 Rescue: (046) 509-5000</a>
+    <a href="tel:911" class="hotline-pill">🚨 Hotline: 911</a>
+    <a href="tel:0465091234" class="hotline-pill">🏥 Health Office: (046) 509-1234</a>
+  </div>
+</div>
+
+<footer style="text-align:center; padding:24px 16px 8px; font-size:12.5px; color:var(--mute);">
+  <p>© 2026 MediQueue Public Health · <a href="#privacy" id="linkOpenPrivacy" style="color:var(--primary); font-weight:600; text-decoration:none;">Terms of Service & Data Privacy Policy (RA 10173)</a></p>
+</footer>
+
+</main>
+
+<!-- TERMS OF SERVICE & DATA PRIVACY AGREEMENT MODAL (RA 10173 COMPLIANCE) -->
+<dialog id="privacyModal" class="privacy-modal-dialog" aria-labelledby="privacyTitle">
+  <div class="privacy-modal-header">
+    <div style="font-size:32px;">🛡️</div>
+    <div>
+      <h2 id="privacyTitle">Terms of Service & Data Privacy Agreement</h2>
+      <p>Republic of the Philippines · Republic Act No. 10173 (Data Privacy Act of 2012)</p>
+    </div>
+  </div>
+
+  <div class="privacy-modal-body">
+    <div class="privacy-section-item">
+      <h4>1. Official Healthcare Purpose</h4>
+      <p>MediQueue is the official municipal queue management and appointment scheduling portal for the City Health Office. By using this service, you authorize our triage officers and physicians to schedule, manage, and process your consultation requests.</p>
+    </div>
+
+    <div class="privacy-section-item">
+      <h4>2. Information We Collect</h4>
+      <p>In strict compliance with the Data Privacy Act of 2012 (RA 10173), we collect only the minimum necessary personal information:
+        <br>• <b>Full Legal Name:</b> For patient verification and counter triage.
+        <br>• <b>Contact Email:</b> To dispatch your digital queue pass, reference code, and appointment reminders.
+        <br>• <b>Requested Clinical Service:</b> To route you to the appropriate medical staff.
+        <br>• <b>Approximate Device Location:</b> Only when you choose "Use my location" to identify your nearest health center.
+      </p>
+    </div>
+
+    <div class="privacy-section-item">
+      <h4>3. Data Protection & Confidentiality</h4>
+      <p>Your personal health data is treated with utmost confidentiality under the physician-patient privilege and the Data Privacy Act. We implement administrative, physical, and technical safeguards. We will never sell, lease, or disclose your information to commercial entities or third parties without your explicit authorization.</p>
+    </div>
+
+    <div class="privacy-section-item">
+      <h4>4. Automated Notifications</h4>
+      <p>By confirming a booking, you consent to receive electronic notifications (appointment pass, queue status updates, and critical community health mission alerts) via email.</p>
+    </div>
+
+    <div class="privacy-section-item">
+      <h4>5. Your Rights as a Data Subject</h4>
+      <p>Under RA 10173, you retain the right to be informed, access, rectify, or request deletion of your appointment records by presenting your reference code at the municipal health station.</p>
+    </div>
+  </div>
+
+  <div class="privacy-modal-footer">
+    <label class="privacy-check-label">
+      <input type="checkbox" id="chkAcceptPrivacy">
+      <span>I have read, understood, and accept the MediQueue Terms of Service and consent to the collection and processing of my personal information under the Data Privacy Act of 2012.</span>
+    </label>
+
+    <div id="privacyDeclineMsg" class="privacy-decline-msg" hidden>
+      ⚠️ <b>Consent Required:</b> You must accept the Data Privacy Agreement to schedule clinical appointments and receive official queue passes. You may review and accept whenever you are ready.
+    </div>
+
+    <div class="privacy-actions">
+      <button type="button" id="btnDeclinePrivacy" class="btn-secondary">Decline</button>
+      <button type="button" id="btnAcceptPrivacy" class="primary" disabled>Accept & Proceed</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- Mobile Bottom Navigation Bar (Fixed at bottom on mobile only) -->
+<nav class="mobile-bottom-nav" aria-label="Mobile Bottom Navigation">
+  <a href="#book" class="on">
+    <span class="nav-icon">📅</span>
+    <span class="nav-label">Book</span>
+  </a>
+  <a href="#track">
+    <span class="nav-icon">⏱️</span>
+    <span class="nav-label">Track</span>
+  </a>
+  <a href="#centers">
+    <span class="nav-icon">📍</span>
+    <span class="nav-label">Centers</span>
+  </a>
+  <a href="#drives">
+    <span class="nav-icon">📢</span>
+    <span class="nav-label">Drives</span>
+  </a>
+  <a href="#staff">
+    <span class="nav-icon">🔒</span>
+    <span class="nav-label">Staff</span>
+  </a>
+</nav>
+
+<div id="toast" role="status"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="shared.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

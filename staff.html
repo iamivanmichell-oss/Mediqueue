@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Staff dashboard – MediQueue</title>
+<link rel="icon" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="staff-page">
+<header>
+  <div class="bar">
+    <a class="brand" href="staff.html" aria-label="MediQueue staff dashboard"><img src="logo.png" alt="MediQueue"></a>
+    <div class="hdr-actions">
+      <a class="btn" href="index.html#book">Patient site</a>
+      <button id="logout" type="button">Sign out</button>
+    </div>
+  </div>
+</header>
+<main>
+  <h1>Staff dashboard</h1>
+  <p class="lead">See who has booked, manage the queue and add walk-in patients.</p>
+
+  <section class="panel">
+    <div class="row top">
+      <label>Health center<select id="sCenter"></select></label>
+      <label>Date<input type="date" id="sDate"></label>
+      <div class="serving"><small>Now serving</small><div class="big" id="nowServing">–</div></div>
+    </div>
+    <div class="row">
+      <button id="callNext" class="primary">Call next patient</button>
+      <button id="exportCsv" type="button">Export CSV</button>
+    </div>
+    <div id="stats" class="stats"></div>
+  </section>
+
+  <section class="panel">
+    <h2>Upcoming bookings</h2>
+    <p class="muted">Bookings per day at the selected center. Select a day to see who booked.</p>
+    <div id="upcoming" class="upcoming"></div>
+  </section>
+
+  <section class="panel">
+    <h2>Patients</h2>
+    <div class="row">
+      <input id="sSearch" placeholder="Search by name, email or reference code">
+    </div>
+    <div class="scroll"><table>
+      <thead><tr><th>No.</th><th>Patient</th><th>Email</th><th>Service</th><th>Time</th><th>Status</th><th></th></tr></thead>
+      <tbody id="sRows"></tbody>
+    </table></div>
+    <h2 class="sub">Add a walk-in</h2>
+    <form id="walkForm" class="row">
+      <input id="wName" placeholder="Patient name" required>
+      <select id="wService"></select>
+      <button class="primary">Add walk-in</button>
+    </form>
+  </section>
+</main>
+<dialog id="confirmOut" aria-labelledby="coTitle">
+  <h2 id="coTitle">Sign out?</h2>
+  <p>You'll need your staff PIN and password to get back into the dashboard.</p>
+  <div class="actions">
+    <button type="button" id="coCancel">Stay signed in</button>
+    <button type="button" id="coOk" class="primary">Sign out</button>
+  </div>
+</dialog>
+<div id="toast" role="status"></div>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="shared.js"></script>
+<script src="staff.js"></script>
+</body>
+</html>
