@@ -1,0 +1,43 @@
+{
+  "name": "MediQueue - Community Healthcare Queue & Appointments",
+  "short_name": "MediQueue",
+  "description": "Installable municipal health queue management and appointment scheduling for General Trias barangay health stations.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f8fafc",
+  "theme_color": "#0f766e",
+  "lang": "en-PH",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["medical", "health", "productivity"],
+  "shortcuts": [
+    {
+      "name": "Book Appointment",
+      "url": "./index.html#book",
+      "description": "Book a health station appointment"
+    },
+    {
+      "name": "Track Queue",
+      "url": "./index.html#track",
+      "description": "Check live patient queue status"
+    },
+    {
+      "name": "Find Health Center",
+      "url": "./index.html#centers",
+      "description": "Locate nearby barangay health centers"
+    },
+    {
+      "name": "Staff Dashboard",
+      "url": "./staff.html",
+      "description": "Access staff queue management"
+    }
+  ]
+}
